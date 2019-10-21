@@ -40,4 +40,29 @@ ASSIGNMENT_OPERATOR: ':=';
 
 //--- PARSER: ---
 
-stylesheet: EOF;
+stylesheet: variableAssignment* stylerule* EOF;
+stylerule: (tagSelector | idSelector | classSelector) body;
+tagSelector: (CAPITAL_IDENT | LOWER_IDENT);
+idSelector: ID_IDENT;
+classSelector: CLASS_IDENT;
+body: OPEN_BRACE declaration* ifclause* CLOSE_BRACE;
+declaration : propertyname COLON expression SEMICOLON;
+propertyname: LOWER_IDENT;
+expression: literal | operation;
+literal: (colorLiteral|boolLiteral|percentageLiteral|pixelLiteral|scalarLiteral|variableReference);
+colorLiteral: COLOR ;
+boolLiteral: TRUE | FALSE;
+percentageLiteral: PERCENTAGE;
+pixelLiteral: PIXELSIZE;
+scalarLiteral: SCALAR;
+variableReference: CAPITAL_IDENT;
+variableAssignment: variableReference ASSIGNMENT_OPERATOR expression SEMICOLON;
+operation : addoperation | multiplyoperation | subtractoperation;
+addoperation: literal PLUS expression;
+multiplyoperation:literal MUL expression;
+subtractoperation: literal MIN expression;
+
+ifclause:IF BOX_BRACKET_OPEN expression BOX_BRACKET_CLOSE body;
+
+
+

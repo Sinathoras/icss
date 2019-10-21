@@ -13,6 +13,7 @@
 				<version>3.8.0</version>
 				<configuration>
 					<release>12</release>
+					<target>12</target>
 				</configuration>
 			</plugin>
 			<plugin>
