@@ -46,18 +46,22 @@ public class Checker {
 
     }
 
-
     private void checkOperations(ASTNode node) {
         checkMulOperations(node);
         checkAddMinOperations(node);
     }
 
     /*
-    TODO : werkend maken met variable referenties.
      */
     // checks MulOperations for scalar values
     private void checkMulOperations(ASTNode node) {
         if (node instanceof MultiplyOperation) {
+            if (node.getChildren().get(0) instanceof VariableReference || node.getChildren().get(1) instanceof VariableReference) {
+                if (!(assignments.get(((VariableReference) node.getChildren().get(0)).name) instanceof ScalarLiteral) ||
+                        !(assignments.get(((VariableReference) node.getChildren().get(1)).name) instanceof ScalarLiteral)) {
+                    node.setError("Multiplying can only be done with Scalar values.");
+                }
+            }
             if (!(node.getChildren().get(0) instanceof ScalarLiteral)) {
                 node.setError("multiplying can only be done with Scalar values");
             }
@@ -76,24 +80,29 @@ public class Checker {
     private void checkAddMinOperations(ASTNode node) {
         // alleen uitvoeren als node een + of - operatie is
         if (node instanceof AddOperation || node instanceof SubtractOperation) {
+            String addSubstractError = "Add and Subtract operations need the same values.";
             // als er een variable referentie links staat.
             if (node.getChildren().get(0) instanceof VariableReference) {
                 if ((assignments.get(((VariableReference) node.getChildren().get(0)).name).getClass()) != node.getChildren().get(1).getClass()) {
-                    System.out.println(((VariableReference) node.getChildren().get(0)).name);
-                    node.setError("Add and Subtract operations need the same values.");
+                    node.setError(addSubstractError);
                 }
             }
             // als variable referentie rechts staat.
             if (node.getChildren().get(1) instanceof VariableReference) {
-                System.out.println("var reference found!");
                 if ((assignments.get(((VariableReference) node.getChildren().get(1)).name).getClass()) != node.getChildren().get(0).getClass()) {
-                    node.setError("Add and Subtract operations need the same values.");
+                    node.setError(addSubstractError);
+                }
+            }
+            // beide kanten variable referentie's
+            if (node.getChildren().get(0) instanceof VariableReference && node.getChildren().get(1) instanceof VariableReference) {
+                if ((assignments.get(((VariableReference) node.getChildren().get(0)).name).getClass()) != (assignments.get(((VariableReference) node.getChildren().get(1)).name).getClass())) {
+                    node.setError(addSubstractError);
                 }
             }
             // geen variable referenties.
             if (!(node.getChildren().get(0) instanceof VariableReference) && !(node.getChildren().get(1) instanceof VariableReference)) {
                 if (node.getChildren().get(0).getClass() != node.getChildren().get(1).getClass()) {
-                    node.setError("Add and Subtract operations need the same values.");
+                    node.setError(addSubstractError);
                 }
             }
         }
