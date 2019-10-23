@@ -1,5 +1,8 @@
 package nl.han.ica.icss.ast;
 
+import nl.han.ica.icss.ast.literals.ScalarLiteral;
+import nl.han.ica.icss.ast.types.ExpressionType;
+
 import java.util.ArrayList;
 
 public abstract class Operation extends Expression {
@@ -25,5 +28,14 @@ public abstract class Operation extends Expression {
             rhs = (Expression) child;
         }
         return this;
+    }
+
+    @Override
+    public ExpressionType getType() {
+        ExpressionType lhsType = lhs.getType();
+        if(lhsType != null && lhsType != ExpressionType.SCALAR){
+            return lhsType;
+        }
+        return rhs.getType();
     }
 }

@@ -7,6 +7,8 @@ import nl.han.ica.icss.ast.literals.ScalarLiteral;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
+import nl.han.ica.icss.ast.types.ExpressionType;
+import nl.han.ica.icss.ast.types.VariableMap;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,16 +16,13 @@ import java.util.LinkedList;
 public class EvalExpressions implements Transform {
 
     private LinkedList<HashMap<String, Literal>> variableValues;
-    private HashMap<String, Expression> variables;
 
     public EvalExpressions() {
-        variables = new HashMap<>();
         variableValues = new LinkedList<>();
     }
 
     @Override
     public void apply(AST ast) {
-        removeVariableAssign(ast.root);
         evalExpression(ast.root, ast.root);
         variableValues = new LinkedList<>();
     }
@@ -55,7 +54,7 @@ public class EvalExpressions implements Transform {
             return (Literal) exp;
         }
         if (exp instanceof VariableReference) {
-            Expression var = variables.get(((VariableReference) exp).name);
+            Expression var = VariableMap.assignments.get(((VariableReference) exp).name);
             return calculateExpression(var);
         }
         if (exp instanceof Operation) {
@@ -64,19 +63,6 @@ public class EvalExpressions implements Transform {
             return calculateOperation((Operation) exp, left, right);
         }
         return null;
-    }
-
-    /*
-       Removes variable assignments ands puts them in a map for references to use.
-     */
-    private void removeVariableAssign(ASTNode node) {
-        if (node instanceof VariableAssignment) {
-            variables.put(((VariableAssignment) node).name.name, ((VariableAssignment) node).expression);
-            node.removeChild(node);
-        }
-        for (ASTNode child : node.getChildren()) {
-            removeVariableAssign(child);
-        }
     }
 
     /*
@@ -95,12 +81,33 @@ public class EvalExpressions implements Transform {
         return null;
     }
 
-    // multiple operation, only allowed with Scalar's
-    private ScalarLiteral calculateMul(Expression left, Expression right) {
-        ScalarLiteral litLeft = (ScalarLiteral) left;
-        ScalarLiteral litRight = (ScalarLiteral) right;
-        int result = litLeft.value * litRight.value;
-        return new ScalarLiteral(result);
+    // multiply operation, only allowed with Scalar's
+    private Literal calculateMul(Expression left, Expression right) {
+        if(left instanceof ScalarLiteral){
+            if(right instanceof PixelLiteral){
+                int result = ((ScalarLiteral) left).value * ((PixelLiteral) right).getValue();
+                return new PixelLiteral(result);
+            }
+            if( right instanceof  PercentageLiteral){
+                int result = ((ScalarLiteral) left).value * ((PercentageLiteral) right).getValue();
+                return new PercentageLiteral(result);
+            }
+        }
+        if(right instanceof ScalarLiteral){
+            if(left instanceof PixelLiteral){
+                int result = ((PixelLiteral) left).value * ((ScalarLiteral) right).getValue();
+                return new PixelLiteral(result);
+            }
+            if(left instanceof  PercentageLiteral){
+                int result = ((PercentageLiteral) left).getValue() * ((ScalarLiteral) right).value;
+                return new PercentageLiteral(result);
+            }
+        }
+        if(left instanceof ScalarLiteral && right instanceof ScalarLiteral){
+            int result = ((ScalarLiteral) left).getValue() * ((ScalarLiteral) right).getValue();
+            return new ScalarLiteral(result);
+        }
+        return null;
     }
 
     /*
