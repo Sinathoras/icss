@@ -8,6 +8,7 @@ import java.util.Map;
 import com.google.errorprone.annotations.Var;
 import com.sun.javafx.collections.MappingChange;
 import nl.han.ica.icss.ast.*;
+import nl.han.ica.icss.ast.literals.BoolLiteral;
 import nl.han.ica.icss.ast.literals.ColorLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
 import nl.han.ica.icss.ast.literals.ScalarLiteral;
@@ -30,30 +31,34 @@ public class Checker {
     }
 
     private void checkNode(ASTNode node) {
+        addVariables(node);
         checkVariablesDefined(node);
         checkOperations(node);
+        checkDeclarations(node);
         for (ASTNode nodes : node.getChildren()) {
             checkNode(nodes);
         }
     }
 
-    private void checkVariablesDefined(ASTNode node) {
+    private void addVariables(ASTNode node) {
         if (node instanceof VariableAssignment) {
             VariableMap.assignments.put(((VariableAssignment) node).name.name, ((VariableAssignment) node).expression);
         }
+    }
+
+    private void checkVariablesDefined(ASTNode node) {
         if (node instanceof VariableReference) {
-            if (!VariableMap.assignments.containsKey(((VariableReference) node).name)) {
+            if (VariableMap.assignments.get(((VariableReference) node).name) == null) {
                 node.setError("this variable is not assigned");
             }
         }
-
     }
 
     private void checkOperations(ASTNode node) {
         if (node instanceof MultiplyOperation) {
             checkMulOperations(node);
         }
-        if(node instanceof AddOperation || node instanceof SubtractOperation) {
+        if (node instanceof AddOperation || node instanceof SubtractOperation) {
             checkAddMinOperations(node);
         }
     }
@@ -71,7 +76,7 @@ public class Checker {
         if (((Operation) node).rhs instanceof Operation) {
             checkOperations(((Operation) node).rhs);
         }
-        if(((Operation) node).lhs instanceof ColorLiteral || ((Operation) node).rhs instanceof ColorLiteral){
+        if (((Operation) node).lhs instanceof ColorLiteral || ((Operation) node).rhs instanceof ColorLiteral) {
             node.setError("colors are not allowed in operations");
         }
     }
@@ -89,11 +94,40 @@ public class Checker {
         if (((Operation) node).rhs instanceof Operation) {
             checkOperations(((Operation) node).rhs);
         }
-        if(((Operation) node).lhs instanceof ColorLiteral || ((Operation) node).rhs instanceof ColorLiteral){
+        if (((Operation) node).lhs instanceof ColorLiteral || ((Operation) node).rhs instanceof ColorLiteral) {
             node.setError("colors are not allowed in operations");
         }
     }
-//
+
+    /*
+    werkt ervanuitgaand dat alle variabelen gedefinieerd zijn.
+     */
+    private void checkDeclarations(ASTNode node) {
+        if (node instanceof Declaration) {
+            if (((Declaration) node).property.name.contains("width") || ((Declaration) node).property.name.contains("height")) {
+                if (((Declaration) node).expression.getType() != ExpressionType.PIXEL) {
+                    if (((Declaration) node).expression instanceof VariableReference) {
+                        if (VariableMap.assignments.get(((VariableReference) ((Declaration) node).expression).name).getType() != ExpressionType.PIXEL) {
+                            node.setError("Width or height declarations require pixel values.");
+                        }
+                    }
+                    node.setError("Width or height declarations require pixel values.");
+                }
+            }
+            if (((Declaration) node).property.name.contains("color")) {
+                if (((Declaration) node).expression.getType() != ExpressionType.COLOR) {
+                    if (((Declaration) node).expression instanceof VariableReference) {
+                        if (VariableMap.assignments.get(((VariableReference) ((Declaration) node).expression).name) != null) {
+                            if (VariableMap.assignments.get(((VariableReference) ((Declaration) node).expression).name).getType() != ExpressionType.COLOR) {
+                                node.setError("Color Declarations require color values.");
+                            }
+                        }
+                    }
+                    node.setError("Color Declarations require Color values.");
+                }
+            }
+        }
+    }
 }
 
 
