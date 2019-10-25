@@ -7,30 +7,19 @@ import nl.han.ica.icss.ast.literals.ScalarLiteral;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
-import nl.han.ica.icss.ast.types.ExpressionType;
 import nl.han.ica.icss.ast.types.VariableMap;
-
-import java.util.HashMap;
-import java.util.LinkedList;
 
 public class EvalExpressions implements Transform {
 
-    private LinkedList<HashMap<String, Literal>> variableValues;
-
     public EvalExpressions() {
-        variableValues = new LinkedList<>();
+
     }
 
     @Override
     public void apply(AST ast) {
         evalExpression(ast.root, ast.root);
-        variableValues = new LinkedList<>();
     }
 
-    /*
-    TODO : variablen uitrekenen.
-    TODO: uitreken methode.
-     */
 
     /*
     Main method that replaces nodes in Tree.
@@ -80,30 +69,31 @@ public class EvalExpressions implements Transform {
         }
         return null;
     }
-
-    // multiply operation, only allowed with Scalar's
+/*
+ multiply operation, only allowed with Scalar's
+ */
     private Literal calculateMul(Expression left, Expression right) {
-        if(left instanceof ScalarLiteral){
-            if(right instanceof PixelLiteral){
+        if (left instanceof ScalarLiteral) {
+            if (right instanceof PixelLiteral) {
                 int result = ((ScalarLiteral) left).value * ((PixelLiteral) right).getValue();
                 return new PixelLiteral(result);
             }
-            if( right instanceof  PercentageLiteral){
+            if (right instanceof PercentageLiteral) {
                 int result = ((ScalarLiteral) left).value * ((PercentageLiteral) right).getValue();
                 return new PercentageLiteral(result);
             }
         }
-        if(right instanceof ScalarLiteral){
-            if(left instanceof PixelLiteral){
+        if (right instanceof ScalarLiteral) {
+            if (left instanceof PixelLiteral) {
                 int result = ((PixelLiteral) left).value * ((ScalarLiteral) right).getValue();
                 return new PixelLiteral(result);
             }
-            if(left instanceof  PercentageLiteral){
+            if (left instanceof PercentageLiteral) {
                 int result = ((PercentageLiteral) left).getValue() * ((ScalarLiteral) right).value;
                 return new PercentageLiteral(result);
             }
         }
-        if(left instanceof ScalarLiteral && right instanceof ScalarLiteral){
+        if (left instanceof ScalarLiteral && right instanceof ScalarLiteral) {
             int result = ((ScalarLiteral) left).getValue() * ((ScalarLiteral) right).getValue();
             return new ScalarLiteral(result);
         }

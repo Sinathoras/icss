@@ -6,24 +6,13 @@ import nl.han.ica.icss.ast.selectors.ClassSelector;
 import nl.han.ica.icss.ast.selectors.IdSelector;
 import nl.han.ica.icss.ast.selectors.TagSelector;
 
-import javax.swing.text.Style;
-
 public class Generator {
 
     public String generate(AST ast) {
         return generateStylesheet(ast.root);
     }
 
-    // not correct result?
-    private String generateString(ASTNode node) {
-        StringBuilder sb = new StringBuilder();
-        String result = (sb.append(node.toString()).toString());
-        for (ASTNode child : node.getChildren()) {
-            generateString(child);
-        }
-        return result;
-    }
-
+    // main method calling the other generate's and returning this as a String
     private String generateStylesheet(ASTNode node) {
         StringBuilder sb = new StringBuilder();
         for (ASTNode child : node.getChildren()) {
@@ -34,6 +23,7 @@ public class Generator {
         return sb.toString();
     }
 
+    // generates the stylerules
     private StringBuilder generateStylerule(ASTNode node) {
         StringBuilder sb = new StringBuilder();
         for (ASTNode child : node.getChildren()) {
@@ -51,8 +41,9 @@ public class Generator {
         sb.append(System.lineSeparator());
         return sb;
     }
+
     /*
-    Generates the selctor
+    Generates the selector
      */
     private StringBuilder generateSelector(ASTNode node) {
         StringBuilder sb = new StringBuilder();
@@ -73,16 +64,17 @@ public class Generator {
      */
     private StringBuilder generateDeclaration(ASTNode node) {
         StringBuilder sb = new StringBuilder();
-            if (node instanceof Declaration) {
-                sb.append("\t");
-                sb.append(((Declaration) node).property.name);
-                sb.append(": ");
-                sb.append(generateExpression(((Declaration) node).expression));
-                sb.append(";");
-                sb.append(System.lineSeparator());
+        if (node instanceof Declaration) {
+            sb.append("\t");
+            sb.append(((Declaration) node).property.name);
+            sb.append(": ");
+            sb.append(generateExpression(((Declaration) node).expression));
+            sb.append(";");
+            sb.append(System.lineSeparator());
         }
         return sb;
     }
+
     /*
     Generates the correct Expression when a expression is found.
      */

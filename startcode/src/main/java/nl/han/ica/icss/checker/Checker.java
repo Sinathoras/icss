@@ -1,31 +1,16 @@
 package nl.han.ica.icss.checker;
 
-import java.nio.charset.MalformedInputException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-
-import com.google.errorprone.annotations.Var;
-import com.sun.javafx.collections.MappingChange;
 import nl.han.ica.icss.ast.*;
-import nl.han.ica.icss.ast.literals.BoolLiteral;
 import nl.han.ica.icss.ast.literals.ColorLiteral;
-import nl.han.ica.icss.ast.literals.PixelLiteral;
-import nl.han.ica.icss.ast.literals.ScalarLiteral;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
-import nl.han.ica.icss.ast.types.*;
+import nl.han.ica.icss.ast.types.ExpressionType;
+import nl.han.ica.icss.ast.types.VariableMap;
 
 public class Checker {
 
-    public static Map<String, Expression> assignments = new HashMap<>();
-
-
-    public LinkedList<HashMap<String, ExpressionType>> variableTypes;
-
     public void check(AST ast) {
-        variableTypes = new LinkedList<>();
         checkNode(ast.root);
 
     }
@@ -48,7 +33,7 @@ public class Checker {
 
     private void checkVariablesDefined(ASTNode node) {
         if (node instanceof VariableReference) {
-            if (VariableMap.assignments.get(((VariableReference) node).name) == null) {
+            if (!(VariableMap.assignments.containsKey(((VariableReference) node).name))) {
                 node.setError("this variable is not assigned");
             }
         }
@@ -64,8 +49,8 @@ public class Checker {
     }
 
     /*
+    checks MulOperations if atleast one side is a scalar value
      */
-    // checks MulOperations for scalar values
     private void checkMulOperations(ASTNode node) {
         if (((Operation) node).lhs.getType() != ExpressionType.SCALAR && ((Operation) node).rhs.getType() != ExpressionType.SCALAR) {
             node.setError("multiplying can only be done with scalar values.");
@@ -107,8 +92,10 @@ public class Checker {
             if (((Declaration) node).property.name.contains("width") || ((Declaration) node).property.name.contains("height")) {
                 if (((Declaration) node).expression.getType() != ExpressionType.PIXEL) {
                     if (((Declaration) node).expression instanceof VariableReference) {
-                        if (VariableMap.assignments.get(((VariableReference) ((Declaration) node).expression).name).getType() != ExpressionType.PIXEL) {
-                            node.setError("Width or height declarations require pixel values.");
+                        if (VariableMap.assignments.containsKey(((VariableReference) ((Declaration) node).expression).name)) {
+                            if (VariableMap.assignments.get(((VariableReference) ((Declaration) node).expression).name).getType() != ExpressionType.PIXEL) {
+                                node.setError("Width or height declarations require pixel values.");
+                            }
                         }
                     }
                     node.setError("Width or height declarations require pixel values.");
@@ -117,7 +104,7 @@ public class Checker {
             if (((Declaration) node).property.name.contains("color")) {
                 if (((Declaration) node).expression.getType() != ExpressionType.COLOR) {
                     if (((Declaration) node).expression instanceof VariableReference) {
-                        if (VariableMap.assignments.get(((VariableReference) ((Declaration) node).expression).name) != null) {
+                        if (VariableMap.assignments.containsKey(((VariableReference) ((Declaration) node).expression).name)) {
                             if (VariableMap.assignments.get(((VariableReference) ((Declaration) node).expression).name).getType() != ExpressionType.COLOR) {
                                 node.setError("Color Declarations require color values.");
                             }

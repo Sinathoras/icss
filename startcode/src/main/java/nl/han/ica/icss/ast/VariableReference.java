@@ -36,6 +36,7 @@ public class VariableReference extends Expression {
 
     @Override
     public ExpressionType getType() {
-        return VariableMap.assignments.get(name).getType();
+        return VariableMap.assignments.containsKey(name) ? VariableMap.assignments.get(name).getType() : null;
     }
+
 }
